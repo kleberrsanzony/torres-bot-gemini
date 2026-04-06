@@ -15,7 +15,7 @@ const initialState = {
     mercadolivre: {
       clientId: '',
       clientSecret: '',
-      redirectUri: 'http://localhost:5173/auth/mercadolivre/callback'
+      redirectUri: 'https://torres-bot-gemini.vercel.app/auth/mercadolivre/callback'
     },
     evolution: {
       instanceUrl: '',
