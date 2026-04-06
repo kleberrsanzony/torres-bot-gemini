@@ -15,13 +15,8 @@ const SettingsView = () => {
     evolution: { ...state.settings.evolution }
   });
 
-  // Sync form data whenever global settings change (especially after auth callback)
-  React.useEffect(() => {
-    setFormData({
-      mercadolivre: { ...state.settings.mercadolivre },
-      evolution: { ...state.settings.evolution }
-    });
-  }, [state.settings]);
+  // Form data will initialize automatically from state.settings on mount.
+  // We don't need a useEffect here that overwrites local typing.
 
   const [loading, setLoading] = useState({
     ml: false,
