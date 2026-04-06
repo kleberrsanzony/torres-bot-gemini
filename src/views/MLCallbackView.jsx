@@ -3,60 +3,84 @@ import { RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 const MLCallbackView = () => {
-  const { dispatch } = useAppContext();
+  const { state, dispatch } = useAppContext();
 
   useEffect(() => {
     // Get code from URL
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
+    const { clientId, clientSecret, redirectUri } = state.settings.mercadolivre;
 
-    if (code) {
-      console.log('Mercado Livre Auth Code detected:', code);
-      
-      // Update state with the code
-      dispatch({ 
-        type: 'UPDATE_SETTINGS', 
-        payload: { 
-          mercadolivre: {
-            authCode: code,
-            isConnected: true,
-            connectedAt: new Date().toISOString()
-          }
-        } 
-      });
+    const completeConnection = async () => {
+      if (code && clientId && clientSecret) {
+        console.log('Finalizing Mercado Livre Auth with Proxy...');
+        
+        try {
+          // Perform the real token exchange via our Vercel Serverless Function
+          const tokenData = await MLService.exchangeCodeForToken(code, clientId, clientSecret, redirectUri);
+          
+          // Update state with the token and info
+          dispatch({ 
+            type: 'UPDATE_SETTINGS', 
+            payload: { 
+              mercadolivre: {
+                authCode: code,
+                accessToken: tokenData.access_token,
+                refreshToken: tokenData.refresh_token,
+                isConnected: true,
+                connectedAt: new Date().toISOString()
+              }
+            } 
+          });
 
-      // Show success toast
-      dispatch({ 
-        type: 'SHOW_TOAST', 
-        payload: { 
-          title: 'Conectado!', 
-          message: 'Sua conta do Mercado Livre foi vinculada com sucesso.', 
-          type: 'success' 
-        } 
-      });
+          dispatch({ 
+            type: 'SHOW_TOAST', 
+            payload: { 
+              title: 'Conectado!', 
+              message: 'Sua conta do Mercado Livre foi vinculada com sucesso.', 
+              type: 'success' 
+            } 
+          });
 
-      // Redirect back to settings after a delay
-      setTimeout(() => {
-        dispatch({ type: 'SET_VIEW', payload: 'settings' });
-        dispatch({ type: 'HIDE_TOAST' });
-      }, 2000);
+          // Redirect back to settings after a delay
+          setTimeout(() => {
+            dispatch({ type: 'SET_VIEW', payload: 'settings' });
+            dispatch({ type: 'HIDE_TOAST' });
+          }, 2000);
+        } catch (error) {
+          console.error('Finalization Error:', error);
+          dispatch({ 
+            type: 'SHOW_TOAST', 
+            payload: { 
+              title: 'Erro na Fase 2', 
+              message: `Não foi possível trocar o código pelo token: ${error.message}`, 
+              type: 'error' 
+            } 
+          });
+          setTimeout(() => {
+            dispatch({ type: 'SET_VIEW', payload: 'settings' });
+            dispatch({ type: 'HIDE_TOAST' });
+          }, 4000);
+        }
+      } else {
+        // Handle error or lack of code/data
+        dispatch({ 
+          type: 'SHOW_TOAST', 
+          payload: { 
+            title: 'Erro de Configuração', 
+            message: 'Faltam dados (Client ID ou Secret) para completar a conexão.', 
+            type: 'error' 
+          } 
+        });
+        setTimeout(() => {
+          dispatch({ type: 'SET_VIEW', payload: 'settings' });
+          dispatch({ type: 'HIDE_TOAST' });
+        }, 3000);
+      }
+    };
 
-    } else {
-      // Handle error or lack of code
-      dispatch({ 
-        type: 'SHOW_TOAST', 
-        payload: { 
-          title: 'Erro na Conexão', 
-          message: 'Não foi possível obter o código de autorização.', 
-          type: 'error' 
-        } 
-      });
-      setTimeout(() => {
-        dispatch({ type: 'SET_VIEW', payload: 'settings' });
-        dispatch({ type: 'HIDE_TOAST' });
-      }, 3000);
-    }
-  }, [dispatch]);
+    completeConnection();
+  }, [dispatch, state.settings.mercadolivre]);
 
   return (
     <div className="flex flex-col items-center justify-center h-[60vh] space-y-6 animate-in fade-in zoom-in duration-500">
