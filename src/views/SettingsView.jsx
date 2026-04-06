@@ -6,6 +6,7 @@ import {
 import { useAppContext } from '../context/AppContext';
 import Card from '../components/ui/Card';
 import { MLService } from '../services/mlService';
+import { EvoService } from '../services/evoService';
 
 const SettingsView = () => {
   const { state, dispatch } = useAppContext();
@@ -89,7 +90,7 @@ const SettingsView = () => {
     }, 800);
   };
 
-  const handleEvoTest = () => {
+  const handleEvoTest = async () => {
     const { instanceUrl, instanceName, apikey } = formData.evolution;
     if (!instanceUrl || !instanceName || !apikey) {
       dispatch({ type: 'SHOW_TOAST', payload: { title: 'Dados Incompletos', message: 'Preencha todos os campos da Evolution API para testar.', type: 'error' } });
@@ -99,43 +100,76 @@ const SettingsView = () => {
 
     setLoading(prev => ({ ...prev, evo: true }));
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(prev => ({ ...prev, evo: false }));
+    try {
+      const data = await EvoService.getConnectionState(instanceUrl, instanceName, apikey);
+      
+      const status = data?.instance?.state || 'unknown';
+      const isOnline = status === 'open';
+
       dispatch({ 
         type: 'SHOW_TOAST', 
         payload: { 
-          title: 'Conexão Estabelecida', 
-          message: `Instância "${instanceName}" respondendo corretamente.`, 
-          type: 'success' 
+          title: isOnline ? 'Conexão Ativa' : 'Instância Detectada', 
+          message: isOnline 
+            ? `A instância "${instanceName}" está ONLINE e pronta.` 
+            : `A instância está em estado: ${status}.`, 
+          type: isOnline ? 'success' : 'info' 
         } 
       });
-      setTimeout(() => dispatch({ type: 'HIDE_TOAST' }), 3000);
-    }, 1500);
+    } catch (error) {
+      dispatch({ 
+        type: 'SHOW_TOAST', 
+        payload: { 
+          title: 'Erro de Conexão', 
+          message: error.message || 'Verifique se a URL e a API Key estão corretos e se o CORS está permitido.', 
+          type: 'error' 
+        } 
+      });
+    } finally {
+      setLoading(prev => ({ ...prev, evo: false }));
+      setTimeout(() => dispatch({ type: 'HIDE_TOAST' }), 4000);
+    }
   };
 
-  const handleEvoQR = () => {
-    const { instanceName } = formData.evolution;
-    if (!instanceName) {
-      dispatch({ type: 'SHOW_TOAST', payload: { title: 'Erro', message: 'Nome da instância é obrigatório para gerar QR Code.', type: 'error' } });
+  const handleEvoQR = async () => {
+    const { instanceUrl, instanceName, apikey } = formData.evolution;
+    if (!instanceUrl || !instanceName || !apikey) {
+      dispatch({ type: 'SHOW_TOAST', payload: { title: 'Erro', message: 'Preencha todos os campos para gerar o QR Code.', type: 'error' } });
       setTimeout(() => dispatch({ type: 'HIDE_TOAST' }), 3000);
       return;
     }
 
     setLoading(prev => ({ ...prev, qr: true }));
     
-    setTimeout(() => {
-      setLoading(prev => ({ ...prev, qr: false }));
+    try {
+      const data = await EvoService.getQrCode(instanceUrl, instanceName, apikey);
+      
+      if (data.code || data.base64) {
+        dispatch({ 
+          type: 'SHOW_TOAST', 
+          payload: { 
+            title: 'QR Code Gerado', 
+            message: 'O código de pareamento foi recuperado com sucesso.', 
+            type: 'success' 
+          } 
+        });
+        // We could theoretically show the QR here if we had a modal
+      } else {
+        throw new Error('Não foi possível recuperar o QR Code.');
+      }
+    } catch (error) {
       dispatch({ 
         type: 'SHOW_TOAST', 
         payload: { 
-          title: 'QR Code Gerado', 
-          message: `O QR Code para a instância "${instanceName}" foi enviado para o serviço de pareamento.`, 
-          type: 'success' 
+          title: 'Erro ao Gerar QR', 
+          message: error.message, 
+          type: 'error' 
         } 
       });
-      setTimeout(() => dispatch({ type: 'HIDE_TOAST' }), 3000);
-    }, 2000);
+    } finally {
+      setLoading(prev => ({ ...prev, qr: false }));
+      setTimeout(() => dispatch({ type: 'HIDE_TOAST' }), 4000);
+    }
   };
 
   return (
