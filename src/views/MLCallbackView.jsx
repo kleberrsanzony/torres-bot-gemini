@@ -19,6 +19,7 @@ const MLCallbackView = () => {
         payload: { 
           mercadolivre: {
             authCode: code,
+            isConnected: true,
             connectedAt: new Date().toISOString()
           }
         } 

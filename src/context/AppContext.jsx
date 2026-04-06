@@ -37,7 +37,22 @@ function appReducer(state, action) {
     case 'ADD_HISTORY': return { ...state, history: [action.payload, ...state.history] };
     case 'SHOW_TOAST': return { ...state, toast: action.payload };
     case 'HIDE_TOAST': return { ...state, toast: null };
-    case 'UPDATE_SETTINGS': return { ...state, settings: { ...state.settings, ...action.payload } };
+    case 'UPDATE_SETTINGS': 
+      return { 
+        ...state, 
+        settings: { 
+          ...state.settings, 
+          ...action.payload,
+          mercadolivre: {
+            ...state.settings.mercadolivre,
+            ...(action.payload.mercadolivre || {})
+          },
+          evolution: {
+            ...state.settings.evolution,
+            ...(action.payload.evolution || {})
+          }
+        } 
+      };
     default: return state;
   }
 }

@@ -9,12 +9,13 @@ const MLProductsView = () => {
   const { state, dispatch } = useAppContext();
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const isConnected = state.settings.mercadolivre.isConnected;
 
   useEffect(() => {
-    if (state.products.length === 0) {
+    if (isConnected && state.products.length === 0) {
       loadProducts();
     }
-  }, []);
+  }, [isConnected]);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -71,6 +72,15 @@ const MLProductsView = () => {
             <div className="flex flex-col items-center justify-center h-full space-y-4 text-slate-500">
               <RefreshCcw className="w-8 h-8 animate-spin text-emerald-500" />
               <p>Buscando seus anúncios no Mercado Livre...</p>
+            </div>
+          ) : !isConnected ? (
+            <div className="flex flex-col items-center justify-center h-full text-slate-500 space-y-4 text-center px-4">
+              <ShoppingBag className="w-16 h-16 opacity-10 mb-2" />
+              <div className="space-y-1">
+                <p className="text-xl font-medium text-slate-300">Conta não vinculada</p>
+                <p className="text-sm max-w-sm">Você precisa conectar sua conta do Mercado Livre nas configurações para visualizar seus produtos.</p>
+              </div>
+              <Button onClick={() => dispatch({ type: 'SET_VIEW', payload: 'settings' })} variant="primary">Ir para Configurações</Button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-500">
