@@ -20,7 +20,8 @@ const initialState = {
     evolution: {
       instanceUrl: '',
       instanceName: '',
-      apikey: ''
+      apikey: '',
+      targetGroupId: ''
     }
   },
   toast: null

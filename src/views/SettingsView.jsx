@@ -287,6 +287,21 @@ const SettingsView = () => {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                <Users className="w-4 h-4 text-slate-500" />
+                Grupo Alvo (JID)
+              </label>
+              <input 
+                type="text" 
+                name="targetGroupId"
+                value={formData.evolution.targetGroupId}
+                onChange={handleEvoChange}
+                placeholder="ex: 120363424792513247@g.us"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/50 transition-all font-mono text-sm"
+              />
+            </div>
+
             <div className="pt-4 grid grid-cols-2 gap-4">
               <button 
                 onClick={handleEvoTest}
