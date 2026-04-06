@@ -13,6 +13,15 @@ const SettingsView = () => {
     mercadolivre: { ...state.settings.mercadolivre },
     evolution: { ...state.settings.evolution }
   });
+
+  // Sync form data whenever global settings change (especially after auth callback)
+  React.useEffect(() => {
+    setFormData({
+      mercadolivre: { ...state.settings.mercadolivre },
+      evolution: { ...state.settings.evolution }
+    });
+  }, [state.settings]);
+
   const [loading, setLoading] = useState({
     ml: false,
     evo: false,
@@ -59,6 +68,16 @@ const SettingsView = () => {
       setTimeout(() => dispatch({ type: 'HIDE_TOAST' }), 3000);
       return;
     }
+
+    // CRITICAL: Save current form data to global state before redirecting
+    // so it's not lost when the page reloads/redirects back.
+    dispatch({ 
+      type: 'UPDATE_SETTINGS', 
+      payload: { 
+        mercadolivre: formData.mercadolivre,
+        evolution: formData.evolution
+      }
+    });
 
     setLoading(prev => ({ ...prev, ml: true }));
     const authUrl = MLService.getAuthUrl(clientId, redirectUri);
