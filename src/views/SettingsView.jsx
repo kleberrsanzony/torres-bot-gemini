@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Settings, Save, Key, Globe, Layout, 
-  ShieldCheck, RefreshCw, ExternalLink, Bot, ShoppingBag
+  ShieldCheck, RefreshCw, ExternalLink, Bot, ShoppingBag, Users
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import Card from '../components/ui/Card';
